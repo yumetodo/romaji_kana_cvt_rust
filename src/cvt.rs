@@ -3,19 +3,20 @@ mod jis_x_4063_2000;
 
 #[derive(Debug)]
 pub struct RomajiCvt {
-    from_romaji_table: [HashMap<&'static str, &'static str>; 2]
+    from_romaji_table: [HashMap<&'static str, &'static str>; 2],
+    ctab: String
 }
 impl RomajiCvt {
     const VOWEL: &'static str = "aiueo";
     pub fn new() -> Self {
         Self {
-            from_romaji_table: jis_x_4063_2000::make_from_romaji_table()
+            from_romaji_table: jis_x_4063_2000::make_from_romaji_table(),
+            ctab: jis_x_4063_2000::make_ctab()
         }
     }
 
-    fn is_consonant(c: char) -> bool {
-        const CTAB: &str = "kstnhmyrwzjpbcgf";
-        CTAB.contains(&[c][..])
+    fn is_consonant(&self, c: char) -> bool {
+        self.ctab.contains(&[c][..])
     }
     fn front_2_chars_are_equal(s: &str) -> Option<bool> {
         let mut it = s.chars().take(2);
@@ -30,7 +31,7 @@ impl RomajiCvt {
                     let c1 = s.chars().next()?;
                     if 'n' == c1 {
                         self.from_romaji_table[1].get(&s[2..]).map(|converted| 'ん'.to_string() + converted)
-                    } else if Self::is_consonant(c1) {
+                    } else if self.is_consonant(c1) {
                         self.from_romaji_table[1].get(&s[1..]).map(|converted| 'っ'.to_string() + converted)
                     } else {
                         None
@@ -50,7 +51,7 @@ impl RomajiCvt {
                     let c1 = s.chars().next()?;
                     if 'n' == c1 {
                         self.from_romaji_impl(&s[2..]).map(|converted| ['ん'.to_string(), converted].concat())
-                    } else if Self::is_consonant(c1) {
+                    } else if self.is_consonant(c1) {
                         self.from_romaji_impl(&s[1..]).map(|converted| ['っ'.to_string(), converted].concat())
                     } else {
                         None
