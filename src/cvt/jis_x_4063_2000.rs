@@ -101,7 +101,7 @@ pub fn make_to_romaji_table() -> HashMap<&'static str, &'static str> {
 
 pub fn make_ctab() -> String {
     let mut ctab = TABLE2.iter().map(|(s, _)| *s).map(|s| s.chars().next().unwrap()).collect::<Vec<_>>();
-    ctab.sort();
+    ctab.sort_unstable();
     ctab.dedup();
     ctab.iter().cloned().collect()
 }
