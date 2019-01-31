@@ -3,6 +3,7 @@ name = "romaji_kana_cvt_rust"
 version = "0.1.0"
 authors = ["yumetodo <yume-wikijp@live.jp>"]
 edition = "2018"
+license = "BSL-1.0"
 
 [dependencies]
 unicode-normalization = "0.1.8"
