@@ -1,0 +1,7 @@
+[package]
+name = "romaji_kana_cvt_rust"
+version = "0.1.0"
+authors = ["yumetodo <yume-wikijp@live.jp>"]
+edition = "2018"
+
+[dependencies]

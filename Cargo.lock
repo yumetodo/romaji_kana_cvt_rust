@@ -1,0 +1,4 @@
+[[package]]
+name = "romaji_kana_cvt_rust"
+version = "0.1.0"
+
