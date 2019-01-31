@@ -99,6 +99,13 @@ pub fn make_to_romaji_table() -> HashMap<&'static str, &'static str> {
     t.iter().cloned().collect()
 }
 
+pub fn make_ctab() -> String {
+    let mut ctab = TABLE2.iter().map(|(s, _)| *s).map(|s| s.chars().next().unwrap()).collect::<Vec<_>>();
+    ctab.sort();
+    ctab.dedup();
+    ctab.iter().cloned().collect()
+}
+
 mod test {
     #[test]
     fn make_from_romaji_table() {
@@ -113,5 +120,12 @@ mod test {
         assert_eq!(Some("a".to_string()), table.get("あ").map(|s| s.to_string()));
         assert_eq!(Some("tya".to_string()), table.get("ちゃ").map(|s| s.to_string()));
     }
+    #[test]
+    fn make_ctab() {
+        let ctab_from_table = super::make_ctab();
+        let mut ctab = "bcdfghjkmnpqrstvwxyz".chars().collect::<Vec<_>>();
+        ctab.sort();
+        ctab.dedup();
+        assert_eq!(ctab.iter().cloned().collect::<String>(), ctab_from_table);
+    }
 }
-
