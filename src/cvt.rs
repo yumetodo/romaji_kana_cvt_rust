@@ -31,9 +31,18 @@ impl RomajiCvt {
         let c1 = it.next()?;
         let cnt = it.take_while(|c| c1 == *c).count();
         if 'n' == c1 {
-            let real_cnt = (cnt + 1) / 2;
+            let mut real_cnt = (cnt + 1) / 2;
+            if 0 == real_cnt && '\'' == s.chars().nth(1)? {
+                real_cnt = 1;
+            }
             let re_base = ['ん'];
-            Some((re_base.iter().cycle().take(real_cnt).collect::<String>(), real_cnt * 2))
+            if 0 == real_cnt {
+                None
+            } else {
+                Some((re_base.iter().cycle().take(real_cnt).collect::<String>(), real_cnt * 2))
+            }
+        } else if 0 == cnt {
+            None
         } else if self.is_consonant(c1) {
             let re_base = ['っ'];
             Some((re_base.iter().cycle().take(cnt).collect::<String>(), cnt))
@@ -134,6 +143,7 @@ mod test {
         assert_eq!(Some("しったこっちゃない".to_string()), cvt.from_romaji("sittakottyanai".to_string()));
         assert_eq!(Some("むっ".to_string()), cvt.from_romaji("muxtu".to_string()));
         assert_eq!(Some("くっっころ".to_string()), cvt.from_romaji("kukkkoro".to_string()));
+        assert_eq!(Some("さんばし".to_string()), cvt.from_romaji("san'basi".to_string()));
     }
     #[test]
     fn to_romaji() {
