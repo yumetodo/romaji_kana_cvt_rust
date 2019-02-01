@@ -1,17 +1,25 @@
-use std::collections::HashMap;
 mod jis_x_4063_2000;
+extern crate unicode_normalization;
+
+// use unicode_normalization::char::compose;
+use unicode_normalization::UnicodeNormalization;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct RomajiCvt {
     from_romaji_table: [HashMap<&'static str, &'static str>; 2],
-    ctab: String
+    to_romaji_table: HashMap<&'static str, &'static str>,
+    ctab: String,
+    two_glyph_second_list: String
 }
 impl RomajiCvt {
     const VOWEL: &'static str = "aiueo";
     pub fn new() -> Self {
         Self {
             from_romaji_table: jis_x_4063_2000::make_from_romaji_table(),
-            ctab: jis_x_4063_2000::make_ctab()
+            to_romaji_table: jis_x_4063_2000::make_to_romaji_table(),
+            ctab: jis_x_4063_2000::make_ctab(),
+            two_glyph_second_list: jis_x_4063_2000::make_two_glyph_second_list()
         }
     }
 
@@ -77,7 +85,30 @@ impl RomajiCvt {
         Some(re)
     }
     pub fn to_romaji(&self, input: String) -> Option<String> {
-        Some(input + "a")
+        //apply NFC uniform.
+        //ex.) で(U+3066, U+3099) => で(U+3067)
+        let s = input.nfc().collect::<String>();
+        let mut re = String::with_capacity(input.len() * 3);
+        let mut prev_c = '\0';
+        for c in s.chars() {
+            if '\0' == prev_c {
+                prev_c = c;
+                continue;
+            }
+            let (key, next_c) = if self.two_glyph_second_list.contains(&[c][..]) {
+                (format!("{}{}", prev_c, c), '\0')
+            } else {
+                (prev_c.to_string(), c)
+            };
+            let key_str: &str = &key;
+            re += self.to_romaji_table.get(key_str)?;
+            prev_c = next_c;
+        }
+        if '\0' != prev_c {
+            let key: &str = &prev_c.to_string();
+            re += self.to_romaji_table.get(key)?;
+        }
+        Some(re)
     }
 }
 
@@ -89,5 +120,13 @@ mod test {
         assert_eq!(Some("んなばかな".to_string()), cvt.from_romaji("nnnabakana".to_string()));
         assert_eq!(Some("なんてこったい".to_string()), cvt.from_romaji("nanntekottai".to_string()));
         assert_eq!(Some("しったこっちゃない".to_string()), cvt.from_romaji("sittakottyanai".to_string()));
+    }
+    #[test]
+    fn to_romaji() {
+        let cvt = super::RomajiCvt::new();
+        assert_eq!(Some("arikitari".to_string()), cvt.to_romaji("ありきたり".to_string()));
+        assert_eq!(Some("nnnabakana".to_string()), cvt.to_romaji("んなばかな".to_string()));
+        assert_eq!(Some("nanntekottai".to_string()), cvt.to_romaji("なんてこったい".to_string()));
+        assert_eq!(Some("sittakottyanai".to_string()), cvt.to_romaji("しったこっちゃない".to_string()));
     }
 }
