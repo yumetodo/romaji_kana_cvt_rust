@@ -4,6 +4,7 @@ extern crate unicode_normalization;
 // use unicode_normalization::char::compose;
 use unicode_normalization::UnicodeNormalization;
 use std::collections::HashMap;
+use std::iter;
 
 #[derive(Debug)]
 pub struct RomajiCvt {
@@ -35,17 +36,15 @@ impl RomajiCvt {
             if 0 == real_cnt && '\'' == s.chars().nth(1)? {
                 real_cnt = 1;
             }
-            let re_base = ['ん'];
             if 0 == real_cnt {
                 None
             } else {
-                Some((re_base.iter().cycle().take(real_cnt).collect::<String>(), real_cnt * 2))
+                Some((iter::repeat('ん').take(real_cnt).collect::<String>(), real_cnt * 2))
             }
         } else if 0 == cnt {
             None
         } else if self.is_consonant(c1) {
-            let re_base = ['っ'];
-            Some((re_base.iter().cycle().take(cnt).collect::<String>(), cnt))
+            Some((iter::repeat('っ').take(cnt).collect::<String>(), cnt))
         } else {
             None
         }
@@ -111,8 +110,7 @@ impl RomajiCvt {
             let key_str: &str = &key;
             let append = self.to_romaji_table.get(key_str)?;
             if 0 != prev_sokuonn_count {
-                let sokuonn_base = [append.chars().next()?];
-                let sokuonn = sokuonn_base.iter().cycle().take(prev_sokuonn_count).collect::<String>();
+                let sokuonn = iter::repeat(append.chars().next()?).take(prev_sokuonn_count).collect::<String>();
                 re += &sokuonn;
                 prev_sokuonn_count = 0;
             }
