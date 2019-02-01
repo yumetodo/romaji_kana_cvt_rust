@@ -106,6 +106,15 @@ pub fn make_ctab() -> String {
     ctab.iter().cloned().collect()
 }
 
+pub fn make_two_glyph_second_list() -> String {
+    let mut two_glyph_second_list = TABLE2.iter()
+        .map(|(_, s)| *s)
+        .filter(|s| s.chars().count() == 2)
+        .map(|s| s.chars().nth(1).unwrap()).collect::<Vec<_>>();
+    two_glyph_second_list.sort_unstable();
+    two_glyph_second_list.dedup();
+    two_glyph_second_list.iter().cloned().collect()
+}
 mod test {
     #[test]
     fn make_from_romaji_table() {
@@ -127,5 +136,11 @@ mod test {
         ctab.sort();
         ctab.dedup();
         assert_eq!(ctab.iter().cloned().collect::<String>(), ctab_from_table);
+    }
+
+    #[test]
+    fn make_two_glyph_second_list() {
+        let list = super::make_two_glyph_second_list();
+        assert_eq!("ぁぃぅぇぉゃゅょ".to_string(), list);
     }
 }
