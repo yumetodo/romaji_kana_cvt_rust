@@ -91,8 +91,8 @@ pub fn make_from_romaji_table() -> [HashMap<&'static str, &'static str>; 2]{
 
 pub fn make_to_romaji_table() -> HashMap<&'static str, &'static str> {
     let mut t: Vec<_> = [
+        TABLE2.iter().map(|(s1, s2)| (*s2, *s1)).collect::<Vec<_>>(),
         TABLE1.iter().map(|(s1, s2)| (*s2, *s1)).collect::<Vec<_>>(),
-        TABLE2.iter().map(|(s1, s2)| (*s2, *s1)).collect::<Vec<_>>()
     ].concat();
     t.sort_by(|a, b| a.0.cmp(b.0));
     t.dedup_by(|a, b| a.0.eq(b.0));
