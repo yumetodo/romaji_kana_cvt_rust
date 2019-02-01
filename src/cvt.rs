@@ -90,9 +90,15 @@ impl RomajiCvt {
         let s = input.nfc().collect::<String>();
         let mut re = String::with_capacity(input.len() * 3);
         let mut prev_c = '\0';
+        let mut prev_is_sokuonn = false;
         for c in s.chars() {
             if '\0' == prev_c {
                 prev_c = c;
+                continue;
+            }
+            if 'っ' == prev_c {
+                prev_c = c;
+                prev_is_sokuonn = true;
                 continue;
             }
             let (key, next_c) = if self.two_glyph_second_list.contains(&[c][..]) {
@@ -101,7 +107,13 @@ impl RomajiCvt {
                 (prev_c.to_string(), c)
             };
             let key_str: &str = &key;
-            re += self.to_romaji_table.get(key_str)?;
+            let append = self.to_romaji_table.get(key_str)?;
+            if prev_is_sokuonn {
+                let double_char = append.chars().next()?;
+                re.push(double_char);
+                prev_is_sokuonn = false;
+            }
+            re += append;
             prev_c = next_c;
         }
         if '\0' != prev_c {
