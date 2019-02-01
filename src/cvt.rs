@@ -90,7 +90,7 @@ impl RomajiCvt {
         let s = input.nfc().collect::<String>();
         let mut re = String::with_capacity(input.len() * 3);
         let mut prev_c = '\0';
-        let mut prev_is_sokuonn = false;
+        let mut prev_sokuonn_count = 0;
         for c in s.chars() {
             if '\0' == prev_c {
                 prev_c = c;
@@ -98,7 +98,7 @@ impl RomajiCvt {
             }
             if 'っ' == prev_c {
                 prev_c = c;
-                prev_is_sokuonn = true;
+                prev_sokuonn_count += 1;
                 continue;
             }
             let (key, next_c) = if self.two_glyph_second_list.contains(&[c][..]) {
@@ -108,10 +108,11 @@ impl RomajiCvt {
             };
             let key_str: &str = &key;
             let append = self.to_romaji_table.get(key_str)?;
-            if prev_is_sokuonn {
-                let double_char = append.chars().next()?;
-                re.push(double_char);
-                prev_is_sokuonn = false;
+            if 0 != prev_sokuonn_count {
+                let sokuonn_base = [append.chars().next()?];
+                let sokuonn = sokuonn_base.iter().cycle().take(prev_sokuonn_count).collect::<String>();
+                re += &sokuonn;
+                prev_sokuonn_count = 0;
             }
             re += append;
             prev_c = next_c;
@@ -132,6 +133,7 @@ mod test {
         assert_eq!(Some("んなばかな".to_string()), cvt.from_romaji("nnnabakana".to_string()));
         assert_eq!(Some("なんてこったい".to_string()), cvt.from_romaji("nanntekottai".to_string()));
         assert_eq!(Some("しったこっちゃない".to_string()), cvt.from_romaji("sittakottyanai".to_string()));
+        assert_eq!(Some("むっ".to_string()), cvt.from_romaji("muxtu".to_string()));
     }
     #[test]
     fn to_romaji() {
@@ -140,5 +142,7 @@ mod test {
         assert_eq!(Some("nnnabakana".to_string()), cvt.to_romaji("んなばかな".to_string()));
         assert_eq!(Some("nanntekottai".to_string()), cvt.to_romaji("なんてこったい".to_string()));
         assert_eq!(Some("sittakottyanai".to_string()), cvt.to_romaji("しったこっちゃない".to_string()));
+        assert_eq!(Some("muxtu".to_string()), cvt.to_romaji("むっ".to_string()));
+        assert_eq!(Some("kukkkoro".to_string()), cvt.to_romaji("くっっころ".to_string()));
     }
 }
