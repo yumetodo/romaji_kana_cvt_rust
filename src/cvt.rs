@@ -26,26 +26,29 @@ impl RomajiCvt {
     fn is_consonant(&self, c: char) -> bool {
         self.ctab.contains(&[c][..])
     }
-    fn front_2_chars_are_equal(s: &str) -> Option<bool> {
-        let mut it = s.chars().take(2);
+    fn convert_sokuonn_and_the_sound_of_the_kana_n(&self, s: &str) -> Option<(String, usize)> {
+        let mut it = s.chars();
         let c1 = it.next()?;
-        let c2 = it.next()?;
-        Some(c1 == c2)
+        let cnt = it.take_while(|c| c1 == *c).count();
+        if 'n' == c1 {
+            let real_cnt = (cnt + 1) / 2;
+            let re_base = ['ん'];
+            Some((re_base.iter().cycle().take(real_cnt).collect::<String>(), real_cnt * 2))
+        } else if self.is_consonant(c1) {
+            let re_base = ['っ'];
+            Some((re_base.iter().cycle().take(cnt).collect::<String>(), cnt))
+        } else {
+            None
+        }
     }
     fn from_romaji_impl(&self, s: &str) -> Option<String> {
         match s.len() {
             3 | 4 => {
-                if Self::front_2_chars_are_equal(s)? {
-                    let c1 = s.chars().next()?;
-                    if 'n' == c1 {
-                        self.from_romaji_table[1].get(&s[2..]).map(|converted| 'ん'.to_string() + converted)
-                    } else if self.is_consonant(c1) {
-                        self.from_romaji_table[1].get(&s[1..]).map(|converted| 'っ'.to_string() + converted)
-                    } else {
-                        None
-                    }
+                if let Some(converted) = self.from_romaji_table[1].get(s) {
+                    Some(converted.to_string())
                 } else {
-                    self.from_romaji_table[1].get(s).map(|converted| converted.to_string())
+                    let (converted, cnt) = self.convert_sokuonn_and_the_sound_of_the_kana_n(s)?;
+                    Some(converted + &self.from_romaji_impl(&s.chars().skip(cnt).collect::<String>())?)
                 }
             },
             2 => {
@@ -55,18 +58,8 @@ impl RomajiCvt {
                 self.from_romaji_table[0].get(s).map(|converted| converted.to_string())
             }
             _ => {
-                if Self::front_2_chars_are_equal(s)? {
-                    let c1 = s.chars().next()?;
-                    if 'n' == c1 {
-                        self.from_romaji_impl(&s[2..]).map(|converted| ['ん'.to_string(), converted].concat())
-                    } else if self.is_consonant(c1) {
-                        self.from_romaji_impl(&s[1..]).map(|converted| ['っ'.to_string(), converted].concat())
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                }
+                let (converted, cnt) = self.convert_sokuonn_and_the_sound_of_the_kana_n(s)?;
+                Some(converted + &self.from_romaji_impl(&s.chars().skip(cnt).collect::<String>())?)
             }
         }
     }
@@ -127,6 +120,12 @@ impl RomajiCvt {
 
 mod test {
     #[test]
+    fn convert_sokuonn_and_the_sound_of_the_kana_n() {
+        let cvt = super::RomajiCvt::new();
+        assert_eq!(Some(("ん".to_string(), 2)), cvt.convert_sokuonn_and_the_sound_of_the_kana_n("nnna"));
+        assert_eq!(Some(("っっ".to_string(), 2)), cvt.convert_sokuonn_and_the_sound_of_the_kana_n("kkkoro"));
+    }
+    #[test]
     fn from_romaji() {
         let cvt = super::RomajiCvt::new();
         assert_eq!(Some("ありきたり".to_string()), cvt.from_romaji("arikitari".to_string()));
@@ -134,6 +133,7 @@ mod test {
         assert_eq!(Some("なんてこったい".to_string()), cvt.from_romaji("nanntekottai".to_string()));
         assert_eq!(Some("しったこっちゃない".to_string()), cvt.from_romaji("sittakottyanai".to_string()));
         assert_eq!(Some("むっ".to_string()), cvt.from_romaji("muxtu".to_string()));
+        assert_eq!(Some("くっっころ".to_string()), cvt.from_romaji("kukkkoro".to_string()));
     }
     #[test]
     fn to_romaji() {
