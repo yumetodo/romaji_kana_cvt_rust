@@ -4,7 +4,7 @@ use cvt::RomajiCvt;
 
 fn convert(input: String) -> Option<String> {
     let converter = RomajiCvt::new();
-    if input.len() == input.chars().filter(|c| c.is_ascii_alphabetic() || '\'' == *c).count() {
+    if input.chars().all(|c| c.is_ascii_alphabetic() || c == '\'') {
         converter.from_romaji(input)
     } else {
         converter.to_romaji(input)
