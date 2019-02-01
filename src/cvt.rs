@@ -75,7 +75,7 @@ impl RomajiCvt {
         let mut re = String::with_capacity(input.len() * 2);
         let mut prev_i = 0;
         for (index, _) in input.match_indices(|c| Self::VOWEL.contains(&[c][..])) {
-            let s = self.from_romaji_impl(&input[prev_i..index + 1])?;
+            let s = self.from_romaji_impl(&input[prev_i..=index])?;
             re += &s;
             prev_i = index + 1;
         }
