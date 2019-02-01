@@ -1,6 +1,6 @@
 [package]
 name = "romaji_kana_cvt_rust"
-version = "1.2.0"
+version = "1.2.1"
 authors = ["yumetodo <yume-wikijp@live.jp>"]
 edition = "2018"
 license = "BSL-1.0"
