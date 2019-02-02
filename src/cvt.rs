@@ -1,6 +1,6 @@
 mod jis_x_4063_2000;
 extern crate unicode_normalization;
-
+use log::info;
 // use unicode_normalization::char::compose;
 use unicode_normalization::UnicodeNormalization;
 use std::collections::HashMap;
@@ -28,6 +28,7 @@ impl RomajiCvt {
         self.ctab.contains(&[c][..])
     }
     fn convert_sokuonn_and_the_sound_of_the_kana_n(&self, s: &str) -> Option<(String, usize)> {
+        info!("s: {}", s);
         let mut it = s.chars();
         let c1 = it.next()?;
         let cnt = it.take_while(|c| c1 == *c).count();
@@ -128,7 +129,10 @@ impl RomajiCvt {
     }
 }
 
+#[cfg(test)]
 mod test {
+    use super::*;
+    extern crate env_logger;
     #[test]
     fn convert_sokuonn_and_the_sound_of_the_kana_n() {
         let cvt = super::RomajiCvt::new();
@@ -137,6 +141,9 @@ mod test {
     }
     #[test]
     fn from_romaji() {
+        // env_logger::init();
+        let _ = env_logger::try_init();
+        info!("start");
         let cvt = super::RomajiCvt::new();
         assert_eq!(Some("ありきたり".to_string()), cvt.from_romaji("arikitari".to_string()));
         assert_eq!(Some("んなばかな".to_string()), cvt.from_romaji("nnnabakana".to_string()));
