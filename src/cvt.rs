@@ -122,7 +122,12 @@ impl RomajiCvt {
         }
         if '\0' != prev_c {
             let key: &str = &prev_c.to_string();
-            re += self.to_romaji_table.get(key)?;
+            let append = self.to_romaji_table.get(key)?;
+            if 0 != prev_sokuonn_count {
+                let sokuonn = iter::repeat(append.chars().next()?).take(prev_sokuonn_count).collect::<String>();
+                re += &sokuonn;
+            }
+            re += append
         }
         Some(re)
     }
@@ -155,6 +160,7 @@ mod test {
         assert_eq!(Some("nanntekottai".to_string()), cvt.to_romaji("なんてこったい".to_string()));
         assert_eq!(Some("sittakottyanai".to_string()), cvt.to_romaji("しったこっちゃない".to_string()));
         assert_eq!(Some("muxtu".to_string()), cvt.to_romaji("むっ".to_string()));
+        assert_eq!(Some("muxxtu".to_string()), cvt.to_romaji("むっっ".to_string()));
         assert_eq!(Some("kukkkoro".to_string()), cvt.to_romaji("くっっころ".to_string()));
     }
 }
