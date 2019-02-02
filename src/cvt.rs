@@ -1,6 +1,6 @@
 mod jis_x_4063_2000;
 extern crate unicode_normalization;
-
+use log::info;
 // use unicode_normalization::char::compose;
 use unicode_normalization::UnicodeNormalization;
 use std::collections::HashMap;
@@ -28,31 +28,38 @@ impl RomajiCvt {
         self.ctab.contains(&[c][..])
     }
     fn convert_sokuonn_and_the_sound_of_the_kana_n(&self, s: &str) -> Option<(String, usize)> {
+        info!("convert_sokuonn_and_the_sound_of_the_kana_n:: s: {}", s);
         let mut it = s.chars();
         let c1 = it.next()?;
         let cnt = it.take_while(|c| c1 == *c).count();
         if 'n' == c1 {
+            info!("convert_sokuonn_and_the_sound_of_the_kana_n:: n detected");
             let kana_cnt = (cnt + 1) / 2;
             if 0 == kana_cnt {
                 if '\'' == s.chars().nth(1)? {
+                    info!("convert_sokuonn_and_the_sound_of_the_kana_n:: n' detected");
                     Some(('ん'.to_string(), 2))
                 } else if self.is_consonant(s.chars().nth(1)?) {
+                    info!("convert_sokuonn_and_the_sound_of_the_kana_n:: n{} detected", s.chars().nth(1)?);
                     Some(('ん'.to_string(), 1))
                 } else {
                     None
                 }
             } else {
+                info!("convert_sokuonn_and_the_sound_of_the_kana_n:: nn detected ({})", kana_cnt);
                 Some((iter::repeat('ん').take(kana_cnt).collect::<String>(), kana_cnt * 2))
             }
         } else if 0 == cnt {
             None
         } else if self.is_consonant(c1) {
+            info!("convert_sokuonn_and_the_sound_of_the_kana_n:: {} detected ({})", c1, cnt);
             Some((iter::repeat('っ').take(cnt).collect::<String>(), cnt))
         } else {
             None
         }
     }
     fn from_romaji_impl(&self, s: &str) -> Option<String> {
+        info!("from_romaji_impl:: s: {}", s);
         match s.len() {
             3 | 4 => {
                 if let Some(converted) = self.from_romaji_table[1].get(s) {
@@ -96,13 +103,16 @@ impl RomajiCvt {
         let mut prev_c = '\0';
         let mut prev_sokuonn_count = 0;
         for c in s.chars() {
+            info!("to_romaji:: c: {}", c);
             if '\0' == prev_c {
+                info!("to_romaji:: prev_c is empty. store {}", c);
                 prev_c = c;
                 continue;
             }
             if 'っ' == prev_c {
                 prev_c = c;
                 prev_sokuonn_count += 1;
+                info!("to_romaji:: `っ` found. prev_c: {}, prev_sokuonn_count: {}", prev_c, prev_sokuonn_count);
                 continue;
             }
             let (key, next_c) = if self.two_glyph_second_list.contains(&[c][..]) {
@@ -112,19 +122,23 @@ impl RomajiCvt {
             };
             let key_str: &str = &key;
             let append = self.to_romaji_table.get(key_str)?;
+            info!("to_romaji:: key: {}, append: {}, next_c: {}", key, append, next_c);
             if 0 != prev_sokuonn_count {
                 let sokuonn = iter::repeat(append.chars().next()?).take(prev_sokuonn_count).collect::<String>();
+                info!("to_romaji:: prev_sokuonn_count: {}, create sokuonn => {}", prev_sokuonn_count, sokuonn);
                 re += &sokuonn;
                 prev_sokuonn_count = 0;
             }
             re += append;
             prev_c = next_c;
         }
+        info!("to_romaji:: prev_sokuonn_count: {}, prev_c: {}", prev_sokuonn_count, prev_c);
         if '\0' != prev_c {
             let key: &str = &prev_c.to_string();
             let append = self.to_romaji_table.get(key)?;
             if 0 != prev_sokuonn_count {
                 let sokuonn = iter::repeat(append.chars().next()?).take(prev_sokuonn_count).collect::<String>();
+                info!("to_romaji:: prev_sokuonn_count: {}, create sokuonn => {}", prev_sokuonn_count, sokuonn);
                 re += &sokuonn;
             }
             re += append
@@ -134,6 +148,7 @@ impl RomajiCvt {
 }
 
 mod test {
+    // use log::LevelFilter;
     #[test]
     fn convert_sokuonn_and_the_sound_of_the_kana_n() {
         let cvt = super::RomajiCvt::new();
@@ -154,6 +169,7 @@ mod test {
     }
     #[test]
     fn to_romaji() {
+        // simple_logging::log_to_stderr(LevelFilter::Info);
         let cvt = super::RomajiCvt::new();
         assert_eq!(Some("arikitari".to_string()), cvt.to_romaji("ありきたり".to_string()));
         assert_eq!(Some("nnnabakana".to_string()), cvt.to_romaji("んなばかな".to_string()));

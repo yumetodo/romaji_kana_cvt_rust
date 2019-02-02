@@ -7,3 +7,7 @@ license = "BSL-1.0"
 
 [dependencies]
 unicode-normalization = "0.1.8"
+log = "0.4"
+
+[dev-dependencies]
+# simple-logging = "2.0.2"
