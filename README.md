@@ -1,5 +1,7 @@
 ﻿# romaji_kana_cvt_rust
 
+[![Build Status](https://travis-ci.org/yumetodo/romaji_kana_cvt_rust.svg?branch=master)](https://travis-ci.org/yumetodo/romaji_kana_cvt_rust)
+
 ローマ字かな変換をRustで
 
 ローマ字の定義はJIS X 4063:2000(2010年1月20日に廃止)に従います。ただし`^`は`ー`に変換されません。  
