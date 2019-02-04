@@ -25,7 +25,7 @@ impl RomajiCvt {
     }
 
     fn is_consonant(&self, c: char) -> bool {
-        self.ctab.contains(&[c][..])
+        self.ctab.contains(c)
     }
     fn convert_sokuonn_and_the_sound_of_the_kana_n(&self, s: &str) -> Option<(String, usize)> {
         info!("convert_sokuonn_and_the_sound_of_the_kana_n:: s: {}", s);
@@ -84,7 +84,7 @@ impl RomajiCvt {
     pub fn from_romaji(&self, input: String) -> Option<String> {
         let mut re = String::with_capacity(input.len() * 2);
         let mut prev_i = 0;
-        for (index, _) in input.match_indices(|c| Self::VOWEL.contains(&[c][..])) {
+        for (index, _) in input.match_indices(|c| Self::VOWEL.contains(c)) {
             let s = self.from_romaji_impl(&input[prev_i..=index])?;
             re += &s;
             prev_i = index + 1;
@@ -115,7 +115,7 @@ impl RomajiCvt {
                 info!("to_romaji:: `っ` found. prev_c: {}, prev_sokuonn_count: {}", prev_c, prev_sokuonn_count);
                 continue;
             }
-            let (key, next_c) = if self.two_glyph_second_list.contains(&[c][..]) {
+            let (key, next_c) = if self.two_glyph_second_list.contains(c) {
                 (format!("{}{}", prev_c, c), '\0')
             } else {
                 (prev_c.to_string(), c)
